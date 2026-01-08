@@ -5,13 +5,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  email:{
+  email: {
     type: String,
-    required: false
+    required: false,
   },
   timezone: {
     type: String,
     required: true,
+    default: "UTC",
   },
 });
 
