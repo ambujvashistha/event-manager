@@ -62,8 +62,8 @@ router.put("/:eventId", async (req, res) => {
   if (!start || !end || !tz)
     return res.status(400).json({ error: "missing fields" });
 
-  const startUTC = dayjs.tz(start, tz).utc();
-  const endUTC = dayjs.tz(end, tz).utc();
+  const startUTC = dayjs.tz(start, "YYYY-MM-DDTHH:mm", tz).utc();
+  const endUTC = dayjs.tz(end, "YYYY-MM-DDTHH:mm", tz).utc();
   const nowUTC = dayjs().utc();
 
   if (endUTC.isSameOrBefore(startUTC))
