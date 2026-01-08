@@ -2,12 +2,14 @@ const express = require("express");
 const router = express.Router();
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
-const timezone = require("dayjs/plugin/timezone");
+const tzPlugin = require("dayjs/plugin/timezone");
 const isSameOrBefore = require("dayjs/plugin/isSameOrBefore");
+const customParseFormat = require("dayjs/plugin/customParseFormat");
 
 dayjs.extend(utc);
-dayjs.extend(timezone);
+dayjs.extend(tzPlugin);
 dayjs.extend(isSameOrBefore);
+dayjs.extend(customParseFormat);
 
 const Event = require("../db/event");
 
@@ -29,7 +31,8 @@ router.post("/", async (req, res) => {
 
     const startUTC = dayjs.tz(start, timezone).utc();
     const endUTC = dayjs.tz(end, timezone).utc();
-    const nowUTC = dayjs().utc();
+    const nowUTC = dayjs().utc().subtract(1, "minute");
+
 
     if (startUTC.isSameOrBefore(nowUTC)) {
       return res.status(400).json({ error: "event cannot start in past" });
