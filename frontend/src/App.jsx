@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezonePlugin from "dayjs/plugin/timezone";
+
 import { getUsers, createUser, createEvent, getEventsForUser } from "./api";
+
+dayjs.extend(utc);
+dayjs.extend(timezonePlugin);
+
+const TIMEZONES = ["UTC", "Asia/Kolkata", "America/New_York", "Europe/London"];
 
 function App() {
   const [users, setUsers] = useState([]);
@@ -12,12 +21,24 @@ function App() {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
 
+  const [activeUserId, setActiveUserId] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadUsers() {
+      const data = await getUsers();
+      setUsers(data);
+    }
+    loadUsers();
+  }, []);
+
   async function loadUsers() {
     const data = await getUsers();
     setUsers(data);
   }
 
-  async function loadEventsForUser(userId) {
+  async function loadEvents(userId) {
+    setActiveUserId(userId);
     if (!userId) {
       setEvents([]);
       return;
@@ -26,12 +47,9 @@ function App() {
     setEvents(data);
   }
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
   async function handleCreateUser() {
-    if (!name) return;
+    if (!name) return setError("Name is required");
+    setError("");
 
     await createUser({ name, timezone });
     setName("");
@@ -39,93 +57,142 @@ function App() {
   }
 
   async function handleCreateEvent() {
-    if (!start || !end || selectedUsers.length === 0) return;
+    if (!start || !end || selectedUsers.length === 0) {
+      return setError("Select users and valid time range");
+    }
 
-    await createEvent({
+    setError("");
+
+    const res = await createEvent({
       profileIds: selectedUsers,
       start,
       end,
       timezone,
     });
 
-    setStart("");
-    setEnd("");
-    setSelectedUsers([]);
+    if (res?.error) {
+      setError(res.error);
+    } else {
+      setStart("");
+      setEnd("");
+      setSelectedUsers([]);
+      loadEvents(activeUserId);
+    }
   }
+
+  const activeUser = users.find((u) => u._id === activeUserId);
+  const displayTimezone = activeUser?.timezone || "UTC";
+
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Create User</h2>
+    <div className="container">
+      <h1>Event Management System</h1>
 
-      <input
-        placeholder="name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
+      {error && <div className="error">{error}</div>}
 
-      <input
-        placeholder="timezone"
-        value={timezone}
-        onChange={(e) => setTimezone(e.target.value)}
-      />
+      <div className="layout">
+        {/* LEFT */}
+        <div className="left">
+          <div className="card">
+            <h2>Create User</h2>
 
-      <button onClick={handleCreateUser}>Add User</button>
+            <input
+              placeholder="User name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
 
-      <hr />
+            <select
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+            >
+              {TIMEZONES.map((tz) => (
+                <option key={tz}>{tz}</option>
+              ))}
+            </select>
 
-      <h2>Create Event</h2>
+            <button onClick={handleCreateUser}>Add User</button>
+          </div>
 
-      {users.map((u) => (
-        <label key={u._id} style={{ display: "block" }}>
-          <input
-            type="checkbox"
-            checked={selectedUsers.includes(u._id)}
-            onChange={(e) => {
-              if (e.target.checked) {
-                setSelectedUsers([...selectedUsers, u._id]);
-              } else {
-                setSelectedUsers(selectedUsers.filter((id) => id !== u._id));
-              }
-            }}
-          />
-          {u.name}
-        </label>
-      ))}
+          <div className="card">
+            <h2>Create Event</h2>
 
-      <input
-        type="datetime-local"
-        value={start}
-        onChange={(e) => setStart(e.target.value)}
-      />
+            <div className="checkboxes">
+              {users.map((u) => (
+                <label key={u._id}>
+                  <input
+                    type="checkbox"
+                    checked={selectedUsers.includes(u._id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedUsers([...selectedUsers, u._id]);
+                      } else {
+                        setSelectedUsers(
+                          selectedUsers.filter((id) => id !== u._id)
+                        );
+                      }
+                    }}
+                  />
+                  {u.name}
+                </label>
+              ))}
+            </div>
 
-      <input
-        type="datetime-local"
-        value={end}
-        onChange={(e) => setEnd(e.target.value)}
-      />
+            <input
+              type="datetime-local"
+              value={start}
+              onChange={(e) => setStart(e.target.value)}
+            />
 
-      <button onClick={handleCreateEvent}>Create Event</button>
+            <input
+              type="datetime-local"
+              value={end}
+              onChange={(e) => setEnd(e.target.value)}
+            />
 
-      <hr />
+            <button onClick={handleCreateEvent}>Create Event</button>
+          </div>
+        </div>
 
-      <h2>View Events</h2>
+        {/* RIGHT */}
+        <div className="right">
+          <div className="card">
+            <h2>Events</h2>
 
-      <select onChange={(e) => loadEventsForUser(e.target.value)}>
-        <option value="">Select user</option>
-        {users.map((u) => (
-          <option key={u._id} value={u._id}>
-            {u.name}
-          </option>
-        ))}
-      </select>
+            <select onChange={(e) => loadEvents(e.target.value)}>
+              <option value="">Select user</option>
+              {users.map((u) => (
+                <option key={u._id} value={u._id}>
+                  {u.name}
+                </option>
+              ))}
+            </select>
 
-      <ul>
-        {events.map((ev) => (
-          <li key={ev._id}>
-            {new Date(ev.startUTC).toUTCString()} →{" "}
-            {new Date(ev.endUTC).toUTCString()}
-          </li>
-        ))}
-      </ul>
+            <ul className="event-list">
+              {events.map((ev) => (
+                <li key={ev._id}>
+                  <div>
+                    <strong>
+                      {dayjs(ev.startUTC)
+                        .tz(displayTimezone)
+                        .format("DD MMM YYYY, hh:mm A")}
+                      {" → "}
+                      {dayjs(ev.endUTC)
+                        .tz(displayTimezone)
+                        .format("DD MMM YYYY, hh:mm A")}
+                    </strong>
+                  </div>
+
+                  <small>Timezone: {displayTimezone}</small>
+                </li>
+              ))}
+
+              {events.length === 0 && (
+                <p className="muted">No events for this user</p>
+              )}
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
