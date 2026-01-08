@@ -29,3 +29,19 @@ export async function getEventsForUser(userId) {
   const res = await fetch(`${BASE_URL}/events/user/${userId}`);
   return res.json();
 }
+
+export async function deleteEvent(eventId) {
+  const res = await fetch(`${BASE_URL}/events/${eventId}`, {
+    method: "DELETE",
+  });
+  return res.json();
+}
+
+export async function editEvent(eventId, data) {
+  const res = await fetch(`${BASE_URL}/events/${eventId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json()
+}

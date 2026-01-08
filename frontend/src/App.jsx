@@ -3,7 +3,14 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezonePlugin from "dayjs/plugin/timezone";
 
-import { getUsers, createUser, createEvent, getEventsForUser } from "./api";
+import {
+  getUsers,
+  createUser,
+  createEvent,
+  getEventsForUser,
+  deleteEvent,
+  editEvent,
+} from "./api";
 
 dayjs.extend(utc);
 dayjs.extend(timezonePlugin);
@@ -23,6 +30,9 @@ function App() {
 
   const [activeUserId, setActiveUserId] = useState("");
   const [error, setError] = useState("");
+  const [editingEventId, setEditingEventId] = useState(null);
+  const [editStart, setEditStart] = useState("");
+  const [editEnd, setEditEnd] = useState("");
 
   useEffect(() => {
     async function loadUsers() {
@@ -54,6 +64,41 @@ function App() {
     await createUser({ name, timezone });
     setName("");
     loadUsers();
+  }
+  async function handleDeleteEvent(eventId) {
+    await deleteEvent(eventId);
+
+    if (activeUserId) {
+      loadEvents(activeUserId);
+    }
+  }
+
+  function startEdit(ev) {
+    setEditingEventId(ev._id);
+
+    setEditStart(
+      dayjs(ev.startUTC).tz(displayTimezone).format("YYYY-MM-DDTHH:mm")
+    );
+    setEditEnd(dayjs(ev.endUTC).tz(displayTimezone).format("YYYY-MM-DDTHH:mm"));
+  }
+
+  async function handleSaveEdit(eventId) {
+    const res = await editEvent(eventId, {
+      start: editStart,
+      end: editEnd,
+      timezone: displayTimezone,
+    });
+
+    if (res?.error) {
+      setError(res.error);
+    } else {
+      setEditingEventId(null);
+      loadEvents(activeUserId);
+    }
+  }
+
+  function cancelEdit() {
+    setEditingEventId(null);
   }
 
   async function handleCreateEvent() {
@@ -90,7 +135,6 @@ function App() {
       {error && <div className="error">{error}</div>}
 
       <div className="layout">
-        {/* LEFT */}
         <div className="left">
           <div className="card">
             <h2>Create User</h2>
@@ -169,20 +213,32 @@ function App() {
 
             <ul className="event-list">
               {events.map((ev) => (
-                <li key={ev._id}>
-                  <div>
-                    <strong>
-                      {dayjs(ev.startUTC)
-                        .tz(displayTimezone)
-                        .format("DD MMM YYYY, hh:mm A")}
-                      {" → "}
-                      {dayjs(ev.endUTC)
-                        .tz(displayTimezone)
-                        .format("DD MMM YYYY, hh:mm A")}
-                    </strong>
-                  </div>
+                <li key={ev._id} className="event-item">
+                  {editingEventId === ev._id ? (
+                    <div>
+                      <input type="datetime-local" value={editStart} onChange={(e) => setEditStart(e.target.value)} />
+                      <input type="datetime-local" value={editEnd} onChange={(e) => setEditEnd(e.target.value)} />
+                      <button onClick={() => handleSaveEdit(ev._id)}> Save </button>
+                      <button onClick={cancelEdit}>Cancel</button>
+                    </div>
+                  ) : (
+                    <>
+                      <div>
+                        <strong>
+                          {dayjs(ev.startUTC) .tz(displayTimezone) .format("DD MMM YYYY, hh:mm A")}
+                          {" → "}
+                          {dayjs(ev.endUTC) .tz(displayTimezone) .format("DD MMM YYYY, hh:mm A")}
+                        </strong>
 
-                  <small>Timezone: {displayTimezone}</small>
+                        <div className="muted">Timezone: {displayTimezone}</div>
+                      </div>
+
+                      <div className="event-actions">
+                        <button style={{margin: 5}} onClick={() => startEdit(ev)}>Edit</button>
+                        <button style={{margin: 5}} onClick={() => handleDeleteEvent(ev._id)}> Delete </button>
+                      </div>
+                    </>
+                  )}
                 </li>
               ))}
 
