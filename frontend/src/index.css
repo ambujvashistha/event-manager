@@ -59,12 +59,9 @@ button {
   gap: 8px;
 }
 
-.nav-link,
-.header-cta {
-  min-width: auto;
-}
-
 .nav-link {
+  display: inline-flex;
+  align-items: center;
   padding: 10px 12px;
   background: transparent;
   color: #7b8798;
@@ -77,15 +74,6 @@ button {
 .nav-link-active {
   color: #d88b08;
   border-color: #f0a020;
-}
-
-.header-cta {
-  padding: 11px 18px;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #cf8b11 0%, #f1a20c 100%);
-  color: #fff;
-  font-weight: 700;
-  box-shadow: 0 8px 20px rgba(219, 149, 18, 0.24);
 }
 
 .layout {

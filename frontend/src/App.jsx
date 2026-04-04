@@ -143,22 +143,13 @@ function App() {
     <div className="container">
       <header className="topbar">
         <div className="brand">
-          <h1>Event Management System</h1>
+          <h1>Event Manage</h1>
         </div>
 
         <nav className="topnav" aria-label="Primary">
-          <button type="button" className="nav-link nav-link-active">
+          <span className="nav-link nav-link-active">
             Events
-          </button>
-          <button type="button" className="nav-link">
-            Schedule
-          </button>
-          <button type="button" className="nav-link">
-            Guests
-          </button>
-          <button type="button" className="header-cta">
-            Create Event
-          </button>
+          </span>
         </nav>
       </header>
 
