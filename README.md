@@ -190,3 +190,6 @@ Current UI lives in the React frontend and focuses on three flows:
 - managing existing events
 
 This project is intentionally small, but the core logic is real and the timezone handling is the most important part of the implementation.
+
+![Event Manage UI](./frontend/public/event_manager_ui.png)
+
