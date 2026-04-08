@@ -12,6 +12,20 @@ The app lets you:
 
 That is the project. There is no authentication, calendar sync, notifications, or analytics layer in the current version.
 
+## Screenshot
+
+Current UI lives in the React frontend and focuses on three flows:
+
+- creating users
+- creating events
+- managing existing events
+
+This project is intentionally small, but the core logic is real and the timezone handling is the most important part of the implementation.
+
+![Event Manage UI](./frontend/public/event_manager_ui.png)
+
+
+
 ## Why I built it this way
 
 I wanted to build a small project that focuses on one real problem instead of adding random features: handling event times across different timezones without making the UI confusing.
@@ -180,16 +194,4 @@ If I continued this project, the next practical steps would be:
 - event storage is UTC-based
 - displayed event times depend on the selected user's timezone
 - there are currently no automated tests in the repo
-
-## Screenshot
-
-Current UI lives in the React frontend and focuses on three flows:
-
-- creating users
-- creating events
-- managing existing events
-
-This project is intentionally small, but the core logic is real and the timezone handling is the most important part of the implementation.
-
-![Event Manage UI](./frontend/public/event_manager_ui.png)
 
